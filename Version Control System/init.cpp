@@ -177,7 +177,6 @@ int main(int argc, char* argv[]) {
 
     string command = argv[1];
 
-    // Handle different commands
     if (command == "init") {
         if (createDirectory(repoDir)) {
             cout << "Initialized empty VCS repository in " << repoDir << "\\" << endl;
