@@ -23,7 +23,7 @@ bool createDirectory(const string &path) {
     }
 }
 
-// Function to add a file to the repository
+// Function to add a file to the repository (no interactive prompt)
 bool addFile(const string &repoDir, const string &filename) {
     string sourcePath = filename;
     string destPath = repoDir + "\\" + filename;
@@ -31,27 +31,8 @@ bool addFile(const string &repoDir, const string &filename) {
     // Check if the source file exists
     ifstream srcFile(sourcePath);
     if (!srcFile) {
-        cout << "File not found: " << sourcePath << endl;
-
-        char createFileChoice;
-        cout << "Do you want to create this file? (y/n): ";
-        cin >> createFileChoice;
-
-        if (createFileChoice == 'y' || createFileChoice == 'Y') {
-            // Create the file if it doesn't exist
-            ofstream newFile(sourcePath);
-            if (newFile) {
-                cout << "File created: " << sourcePath << endl;
-                newFile.close();
-                return addFile(repoDir, filename); // Retry adding after creation
-            } else {
-                cerr << "Failed to create file: " << sourcePath << endl;
-                return false;
-            }
-        } else {
-            cout << "File not added to the repository." << endl;
-            return false;
-        }
+        cerr << "File not found: " << sourcePath << endl;
+        return false;
     }
 
     // Copy file to repository
@@ -164,36 +145,40 @@ bool revertFile(const string &repoDir, const string &filename, const string &tim
 
 // Main function for the command-line interface
 int main(int argc, char* argv[]) {
-    string repoDir = "MyRepo"; // Repository directory
-
     if (argc < 2) {
         cerr << "Usage:\n";
-        cerr << "  myvcs init\n";
-        cerr << "  myvcs add <filename>\n";
-        cerr << "  myvcs commit <filename>\n";
-        cerr << "  myvcs revert <filename> [timestamp]\n";
+        cerr << "  myvcs init <repo>\n";
+        cerr << "  myvcs add <repo> <filename>\n";
+        cerr << "  myvcs commit <repo> <filename>\n";
+        cerr << "  myvcs revert <repo> <filename> [timestamp]\n";
         return 1;
     }
 
     string command = argv[1];
 
-    if (command == "init") {
+    if (command == "init" && argc >= 3) {
+        string repoDir = argv[2];
         if (createDirectory(repoDir)) {
+            // Also create commits subdirectory
+            createDirectory(repoDir + "\\commits");
             cout << "Initialized empty VCS repository in " << repoDir << "\\" << endl;
         }
-    } else if (command == "add" && argc >= 3) {
-        string filename = argv[2];
+    } else if (command == "add" && argc >= 4) {
+        string repoDir = argv[2];
+        string filename = argv[3];
         if (addFile(repoDir, filename)) {
             cout << "File " << filename << " added to repository." << endl;
         }
-    } else if (command == "commit" && argc >= 3) {
-        string filename = argv[2];
+    } else if (command == "commit" && argc >= 4) {
+        string repoDir = argv[2];
+        string filename = argv[3];
         if (commitFile(repoDir, filename)) {
             cout << "File " << filename << " committed." << endl;
         }
-    } else if (command == "revert" && argc >= 3) {
-        string filename = argv[2];
-        string timestamp = (argc == 4) ? argv[3] : "";
+    } else if (command == "revert" && argc >= 4) {
+        string repoDir = argv[2];
+        string filename = argv[3];
+        string timestamp = (argc == 5) ? argv[4] : "";
         if (revertFile(repoDir, filename, timestamp)) {
             cout << "File " << filename << " reverted." << endl;
         }
